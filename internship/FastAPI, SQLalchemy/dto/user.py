@@ -1,4 +1,4 @@
 from pydantic import BaseModel
 
-class User(BaseModel):
+class user(BaseModel):
     name: str
