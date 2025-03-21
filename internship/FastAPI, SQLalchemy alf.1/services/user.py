@@ -33,4 +33,3 @@ def remove(db: Session, id: int):
 
     db.commit()
     return user
-
