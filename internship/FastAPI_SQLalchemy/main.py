@@ -1,23 +1,17 @@
 #uvicorn main:app --reload
-import sqlalchemy
-import uvicorn
+from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData
 
+import uvicorn
 from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
 
-books = [
-    {
-        "id": 1,
-        "title": "Асинхронность в Python",
-        "author": "Маттью",
-    },
-    {
-        "id": 2,
-        "title": "Python",
-        "author": "Митч",
-    }
-]
+engine = create_engine('sqlite:///books.db') 
+books = Table('books', MetaData,
+              Column('id', Integer, primary_key=True),
+              Column('title', String),
+              Column('author', String))
+MetaData.create_all(engine)
 
 @app.get("/books")
 def read_books():
@@ -31,12 +25,14 @@ def get_book(book_id: int):
         
         raise HTTPException(status_code=404, detail="Book not found")
     
-class NewBook(sqlalchemy):
-    pass
+class NewBook(books):
+    Column('title', String),
+    Column('author', String)
 
 @app.post("/books")
 def create_books(new_book: NewBook):
-    pass
+    books.update({ Column('title', String),
+    Column('author', String)})
 
 
 if __name__ == '__main__':
