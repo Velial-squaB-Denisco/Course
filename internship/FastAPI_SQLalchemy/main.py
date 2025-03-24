@@ -41,6 +41,7 @@ def create_books(new_book: NewBook):
         "title": new_book.title,
         "author": new_book.author
     })
+    return {"Succes": True, "message": "Succes"}
 
 
 if __name__ == '__main__':
