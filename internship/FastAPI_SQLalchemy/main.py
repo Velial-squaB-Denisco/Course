@@ -1,10 +1,14 @@
 #uvicorn main:app --reload
 import sqlalchemy
+import uvicorn
 
 from fastapi import FastAPI
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
+@app.get("/", summary="Main", tags=["Root"])
+def Home():
     return "Hello world"
+
+if __name__ == '__main__':
+    uvicorn.run("main:app")
