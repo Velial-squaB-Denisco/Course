@@ -1,17 +1,30 @@
 #uvicorn main:app --reload
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData
+from sqlalchemy.orm import sessionmaker
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
+
+from pydantic import BaseModel
 
 app = FastAPI()
 
 engine = create_engine('sqlite:///books.db') 
-books = Table('books', MetaData,
+books = Table('books', metadata,
               Column('id', Integer, primary_key=True),
               Column('title', String),
               Column('author', String))
-MetaData.create_all(engine)
+
+metadata.create_all(engine)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 @app.get("/books")
 def read_books():
@@ -25,15 +38,19 @@ def get_book(book_id: int):
         
         raise HTTPException(status_code=404, detail="Book not found")
     
-class NewBook(books):
-    Column('title', String),
-    Column('author', String)
+class NewBook(BaseModel):
+    title: str
+    author: str
 
 @app.post("/books")
-def create_books(new_book: NewBook):
-    books.update({ Column('title', String),
-    Column('author', String)})
-
+def create_book(new_book: NewBook, db=Depends(get_db)):
+    new_book_data = {
+        "title": new_book.title,
+        "author": new_book.author
+    }
+    db.execute(books.insert().values(**new_book_data))
+    db.commit()
+    return new_book_data
 
 if __name__ == '__main__':
     uvicorn.run("main:app", reload=True)
