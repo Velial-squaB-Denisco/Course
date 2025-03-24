@@ -8,20 +8,16 @@ from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 
 app = FastAPI()
-
-# Создание модуля для метаданных
 metadata = MetaData()
-
-# Инициализация базы данных
 engine = create_engine('sqlite:///books.db')
 
-# Определение таблицы "books"
+#//////////////////////////////////////////////////////////////////////////////
+
 books = Table('books', metadata,
               Column('id', Integer, primary_key=True),
               Column('title', String),
               Column('author', String))
 
-# Создание таблиц в базе данных
 metadata.create_all(engine)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -32,6 +28,8 @@ def get_db():
         yield db
     finally:
         db.close()
+
+#//////////////////////////////////////////////////////////////////////////////
 
 @app.get("/books")
 def read_books(db: Session = Depends(get_db)):
