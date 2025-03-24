@@ -23,5 +23,9 @@ books = [
 def read_books():
     return books
 
+@app.get("/books/id")
+def book():
+    pass
+
 if __name__ == '__main__':
     uvicorn.run("main:app", reload=True)
