@@ -19,17 +19,17 @@ books = [
     }
 ]
 
-@app.get("/books", summary="Main", tags=["Root"])
+@app.get("/books")
 def read_books():
     return books
 
 @app.get("/books/{book_id}")
 def get_book(book_id: int):
     for book in books:
-        if books["id"] == book_id:
+        if book["id"] == book_id:
             return book
         
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail="Book not found")
 
 if __name__ == '__main__':
     uvicorn.run("main:app", reload=True)
