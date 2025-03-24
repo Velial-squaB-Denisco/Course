@@ -19,9 +19,9 @@ books = [
     }
 ]
 
-@app.get("/", summary="Main", tags=["Root"])
-def Home():
-    return "Hello world"
+@app.get("/books", summary="Main", tags=["Root"])
+def read_books():
+    return books
 
 if __name__ == '__main__':
     uvicorn.run("main:app", reload=True)
