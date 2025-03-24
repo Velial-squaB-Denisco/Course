@@ -30,6 +30,14 @@ def get_book(book_id: int):
             return book
         
         raise HTTPException(status_code=404, detail="Book not found")
+    
+class NewBook(sqlalchemy):
+    pass
+
+@app.post("/books")
+def create_books(new_book: NewBook):
+    pass
+
 
 if __name__ == '__main__':
     uvicorn.run("main:app", reload=True)
