@@ -58,6 +58,8 @@ data ={
 class UserSchema(BaseModel):
     email: EmailStr
     bio: str | None = Field(max_length=1000)
+
+class UserAgeSchema(UserSchema):
     age: int = Field(ge=0, le=130)
 
-print(UserSchema(**data))
+print(UserAgeSchema(**data))
