@@ -1,5 +1,5 @@
 #uvicorn main:app --reload
-from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String
 from sqlalchemy.orm import sessionmaker
 
 import uvicorn
@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
+metadata = MetaData()
 engine = create_engine('sqlite:///books.db') 
 books = Table('books', metadata,
               Column('id', Integer, primary_key=True),
