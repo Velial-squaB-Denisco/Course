@@ -86,6 +86,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
 
 engine = create_async_engine('sqlite+aiosqlite:///books.db')
 
@@ -96,4 +97,9 @@ new_session = async_sessionmaker(engine, expire_on_commit=False)
 
 async def get_session():
     async with new_session() as session:
-        pass
+        yield session
+
+class Base(DeclarativeBase):
+    pass
+
+class BookModel(Base):
