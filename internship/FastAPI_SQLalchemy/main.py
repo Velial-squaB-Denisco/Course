@@ -86,7 +86,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+app = FastAPI()
 
 engine = create_async_engine('sqlite+aiosqlite:///books.db')
 
@@ -103,3 +105,16 @@ class Base(DeclarativeBase):
     pass
 
 class BookModel(Base):
+    __tablename__ = "Books"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str]
+    author: Mapped[str]
+
+@app.post("/setup_database")
+async def setup_database():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+
+if __name__ == "__main__":
+    uvicorn.run("main:app")
