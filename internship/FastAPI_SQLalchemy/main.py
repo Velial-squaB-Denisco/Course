@@ -116,5 +116,15 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
+class BookSchema():
+
+@app.post("/books")
+async def add_book(book: BookSchema):
+    pass
+
+@app.get("/books")
+async def get_book(books):
+    return books
+
 if __name__ == "__main__":
     uvicorn.run("main:app")
