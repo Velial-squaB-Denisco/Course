@@ -87,6 +87,7 @@ import uvicorn
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -138,8 +139,10 @@ async def add_book(book: BookAddSchema, session: SessinDep):
     return {"ok"}
 
 @app.get("/books")
-async def get_book(books):
-    return books
+async def get_book(books,session: SessinDep):
+    qwery = select(BookModel)
+    res = await session.execute(qwery)
+    return res.all()
 
 if __name__ == "__main__":
     uvicorn.run("main:app")
