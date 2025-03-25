@@ -47,36 +47,74 @@
 # if __name__ == '__main__':
 #     uvicorn.run("main:app", reload=True)
 
+# import uvicorn
+# from fastapi import FastAPI
+# from pydantic import BaseModel, Field, EmailStr
+
+# app = FastAPI()
+# data = {
+#         "email": "abc@mail.ru",
+#         "bio": "Асинхронность в Python",
+#         "age": 14,
+#     }
+
+# class UserSchema(BaseModel):
+#     email: EmailStr
+#     bio: str | None = Field(max_length=1000)
+
+# class UserAgeSchema(UserSchema):
+#     age: int = Field(ge=0, le=130)
+
+# users = []
+
+# @app.post("/users")
+# def add_user(user: UserAgeSchema):
+#     users.append(user)
+#     return {"succes"}
+
+# @app.get("/users") 
+# def get_user() -> list [UserAgeSchema]:
+#     return users
+
+# print(UserAgeSchema(**data))
+
+# if __name__ == "__main__":
+#     uvicorn.run("main:app", reload=True)
+
 import uvicorn
 from fastapi import FastAPI
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel
+
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 app = FastAPI()
-data = {
-        "email": "abc@mail.ru",
-        "bio": "Асинхронность в Python",
-        "age": 14,
-    }
 
-class UserSchema(BaseModel):
-    email: EmailStr
-    bio: str | None = Field(max_length=1000)
+engine = create_async_engine('sqlite+aiosqlite:///books.db')
 
-class UserAgeSchema(UserSchema):
-    age: int = Field(ge=0, le=130)
+# with engine.connect() as conn:
+#     conn.execute("""""")
 
-users = []
+new_session = async_sessionmaker(engine, expire_on_commit=False)
 
-@app.post("/users")
-def add_user(user: UserAgeSchema):
-    users.append(user)
-    return {"succes"}
+async def get_session():
+    async with new_session() as session:
+        yield session
 
-@app.get("/users") 
-def get_user() -> list [UserAgeSchema]:
-    return users
+class Base(DeclarativeBase):
+    pass
 
-print(UserAgeSchema(**data))
+class BookModel(Base):
+    __tablename__ = "Books"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str]
+    author: Mapped[str]
+
+@app.post("/setup_database")
+async def setup_database():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True)
+    uvicorn.run("main:app")
