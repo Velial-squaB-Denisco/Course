@@ -139,7 +139,7 @@ async def add_book(book: BookAddSchema, session: SessinDep):
     return {"ok"}
 
 @app.get("/books")
-async def get_book(books,session: SessinDep):
+async def get_book(session: SessinDep):
     qwery = select(BookModel)
     res = await session.execute(qwery)
     return res.all()
