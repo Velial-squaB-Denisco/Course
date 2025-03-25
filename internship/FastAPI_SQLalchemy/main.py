@@ -47,9 +47,12 @@
 # if __name__ == '__main__':
 #     uvicorn.run("main:app", reload=True)
 
+import uvicorn
+from fastapi import FastAPI
 from pydantic import BaseModel, Field, EmailStr
 
-data ={
+app = FastAPI()
+data = {
         "email": "abc@mail.ru",
         "bio": "Асинхронность в Python",
         "age": 14,
@@ -62,4 +65,18 @@ class UserSchema(BaseModel):
 class UserAgeSchema(UserSchema):
     age: int = Field(ge=0, le=130)
 
+users = []
+
+@app.post("/users")
+def add_user(user: UserAgeSchema):
+    users.append(user)
+    return {"succes"}
+
+@app.get("/users") 
+def get_user() -> list [UserAgeSchema]:
+    return users
+
 print(UserAgeSchema(**data))
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", reload=True)
