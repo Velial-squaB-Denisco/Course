@@ -133,6 +133,9 @@ async def add_book(book: BookAddSchema, session: SessinDep):
         title = book.title,
         author = book.author
     )
+    session.add(new_book)
+    await session.commit()
+    return {"ok"}
 
 @app.get("/books")
 async def get_book(books):
