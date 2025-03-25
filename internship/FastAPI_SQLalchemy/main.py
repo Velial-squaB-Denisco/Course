@@ -81,11 +81,13 @@
 # if __name__ == "__main__":
 #     uvicorn.run("main:app", reload=True)
 
+from typing import Annotated
+
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 app = FastAPI()
@@ -101,6 +103,8 @@ async def get_session():
     async with new_session() as session:
         yield session
 
+SessinDep = Annotated[AsyncSession, Depends(get_session)]
+
 class Base(DeclarativeBase):
     pass
 
@@ -115,6 +119,24 @@ async def setup_database():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+
+class BookAddSchema(BaseModel):
+    title: str
+    author: str
+
+class BookASchema(BookAddSchema):
+    id: int
+
+@app.post("/books")
+async def add_book(book: BookAddSchema, session: SessinDep):
+    new_book = BookModel(
+        title = book.title,
+        author = book.author
+    )
+
+@app.get("/books")
+async def get_book(books):
+    return books
 
 if __name__ == "__main__":
     uvicorn.run("main:app")
