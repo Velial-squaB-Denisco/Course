@@ -81,11 +81,13 @@
 # if __name__ == "__main__":
 #     uvicorn.run("main:app", reload=True)
 
+from typing import Annotated
+
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 app = FastAPI()
@@ -100,6 +102,8 @@ new_session = async_sessionmaker(engine, expire_on_commit=False)
 async def get_session():
     async with new_session() as session:
         yield session
+
+SessinDep = Annotated[AsyncSession, Depends(get_session)]
 
 class Base(DeclarativeBase):
     pass
