@@ -120,13 +120,19 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-class BookSchema(BaseModel):
+class BookAddSchema(BaseModel):
     title: str
     author: str
 
+class BookASchema(BookAddSchema):
+    id: int
+
 @app.post("/books")
-async def add_book(book: BookSchema):
-    pass
+async def add_book(book: BookAddSchema, session: SessinDep):
+    new_book = BookModel(
+        title = book.title,
+        author = book.author
+    )
 
 @app.get("/books")
 async def get_book(books):
