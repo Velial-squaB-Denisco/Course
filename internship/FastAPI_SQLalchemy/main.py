@@ -116,7 +116,9 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-class BookSchema():
+class BookSchema(BaseModel):
+    title: str
+    author: str
 
 @app.post("/books")
 async def add_book(book: BookSchema):
