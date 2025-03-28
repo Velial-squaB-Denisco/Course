@@ -11,13 +11,13 @@ class MyWindow(QMainWindow):
         self.setWindowTitle("My prog")
         self.setGeometry(300, 250, 350, 300)
 
-        # Центральный виджет и его макет
+        # Центральный виджет
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
 
         # /// Label
-        self.label = QtWidgets.QLabel("Label", self)
+        self.label = QtWidgets.QLabel("Iter++", self)
         main_layout.addWidget(self.label)
 
         # /// Горизонтальный макет для кнопок
