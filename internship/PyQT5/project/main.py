@@ -41,39 +41,39 @@ class MyWindow(QMainWindow):
         main_layout.addWidget(self.Output)
 
         self.running = False
-        self.paused = False
+        self.stop = False
         self.i = 0
         self.a = 1
         self.thread = None
 
-    def control_loop(self):
-        if not self.running:
-            self.running = True
-            self.paused = False
-            self.thread = threading.Thread(target=self.iter)
-            self.thread.start()
-        elif self.paused:
-            self.paused = False
+    # def control_loop(self):
+    #     if not self.running:
+    #         self.running = True
+    #         self.paused = False
+    #         self.thread = threading.Thread(target=self.iter)
+    #         self.thread.start()
+    #     elif self.paused:
+    #         self.paused = False
 
-    def pause_loop(self):
-        if self.running and not self.paused:
-            self.paused = True
+    # def pause_loop(self):
+    #     if self.running and not self.paused:
+    #         self.paused = True
 
-    def iter(self):
-        while self.running:
-            if not self.paused:
-                if self.i <= self.a:
-                    QtCore.QMetaObject.invokeMethod(
-                        self.Output, 
-                        "append", 
-                        QtCore.Q_ARG(str, str(self.i))
-                    )
-                    self.i += 1
-                    self.a += 1
-                    time.sleep(1)
-                else:
-                    self.running = False
-            QtCore.QThread.msleep(100)
+    # def iter(self):
+    #     while self.running:
+    #         if not self.paused:
+    #             if self.i <= self.a:
+    #                 QtCore.QMetaObject.invokeMethod(
+    #                     self.Output, 
+    #                     "append", 
+    #                     QtCore.Q_ARG(str, str(self.i))
+    #                 )
+    #                 self.i += 1
+    #                 self.a += 1
+    #                 time.sleep(1)
+    #             else:
+    #                 self.running = False
+    #         QtCore.QThread.msleep(100)
 
     def closeEvent(self, event):
         self.running = False
