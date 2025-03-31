@@ -1,10 +1,13 @@
+import os
 import sys
-import time
 import threading
+import subprocess
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget
 
 class MyWindow(QMainWindow):
+    update_signal = QtCore.pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
 
@@ -22,15 +25,15 @@ class MyWindow(QMainWindow):
 
         # /// Горизонтальный макет для кнопок
         button_layout = QHBoxLayout()
-        
+
         # /// Start Button
         self.btnStart = QtWidgets.QPushButton("Start", self)
-        self.btnStart.clicked.connect(self.control_loop)
+        self.btnStart.clicked.connect(self.start)
         button_layout.addWidget(self.btnStart)
 
         # /// Pause Button
-        self.btnPause = QtWidgets.QPushButton("Pause", self)
-        self.btnPause.clicked.connect(self.pause_loop)
+        self.btnPause = QtWidgets.QPushButton("Stop", self)
+        self.btnPause.clicked.connect(self.stop)
         button_layout.addWidget(self.btnPause)
 
         main_layout.addLayout(button_layout)
@@ -40,40 +43,56 @@ class MyWindow(QMainWindow):
         self.Output.setReadOnly(True)
         main_layout.addWidget(self.Output)
 
-        self.running = False
-        self.stop = False
-        self.i = 0
-        self.a = 1
+        self.process = None
         self.thread = None
+        self.running = False
+        self.update_signal.connect(self.append_text)
 
-    # def control_loop(self):
-    #     if not self.running:
-    #         self.running = True
-    #         self.paused = False
-    #         self.thread = threading.Thread(target=self.iter)
-    #         self.thread.start()
-    #     elif self.paused:
-    #         self.paused = False
+    def start(self):
+        if not self.running:
+            self.running = True
+            self.thread = threading.Thread(target=self.run_cmd)
+            self.thread.start()
 
-    # def pause_loop(self):
-    #     if self.running and not self.paused:
-    #         self.paused = True
+    def stop(self):
+        if self.running and self.process:
+            self.running = False
+            self.process.terminate()
 
-    # def iter(self):
-    #     while self.running:
-    #         if not self.paused:
-    #             if self.i <= self.a:
-    #                 QtCore.QMetaObject.invokeMethod(
-    #                     self.Output, 
-    #                     "append", 
-    #                     QtCore.Q_ARG(str, str(self.i))
-    #                 )
-    #                 self.i += 1
-    #                 self.a += 1
-    #                 time.sleep(1)
-    #             else:
-    #                 self.running = False
-    #         QtCore.QThread.msleep(100)
+    def run_cmd(self):
+
+        if getattr(sys, 'frozen', False):
+            executable_dir = os.path.dirname(sys.executable)
+        else:
+            executable_dir = os.path.dirname(os.path.abspath(__file__))
+        batch_file_path = os.path.join(executable_dir, '..', 'cmd.bat')
+
+        self.process = subprocess.Popen(
+            [batch_file_path],
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding='cp1251',
+            errors='replace'
+        )
+
+        for stdout_line in iter(self.process.stdout.readline, ""):
+            if not self.running:
+                break
+            self.update_signal.emit(stdout_line)
+
+        for stderr_line in iter(self.process.stderr.readline, ""):
+            if not self.running:
+                break
+            self.update_signal.emit(stderr_line)
+
+        self.process.stdout.close()
+        self.process.stderr.close()
+        self.process.wait()
+
+    def append_text(self, text):
+        self.Output.append(text)
 
     def closeEvent(self, event):
         self.running = False
