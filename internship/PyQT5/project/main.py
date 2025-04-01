@@ -46,6 +46,8 @@ class MyWindow(QMainWindow):
         self.process = None
         self.thread = None
         self.running = False
+
+        # Подключаем сигнал к слоту
         self.update_signal.connect(self.append_text)
 
     def start(self):
@@ -68,13 +70,13 @@ class MyWindow(QMainWindow):
         batch_file_path = os.path.join(executable_dir, '..', 'cmd.bat')
 
         self.process = subprocess.Popen(
-            [batch_file_path],
+            [batch_file_path],  # Указываем относительный путь к файлу
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            encoding='cp1251',
-            errors='replace'
+            encoding='cp1251',  # Попробуйте использовать эту кодировку
+            errors='replace'  # Игнорировать ошибки декодирования
         )
 
         for stdout_line in iter(self.process.stdout.readline, ""):
@@ -97,6 +99,7 @@ class MyWindow(QMainWindow):
     def closeEvent(self, event):
         self.running = False
         if self.thread is not None and self.thread.is_alive():
+            self.stop(self)
             self.thread.join()
         event.accept()
 
