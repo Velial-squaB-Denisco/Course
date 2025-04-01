@@ -63,10 +63,12 @@ class MyWindow(QMainWindow):
     def run_cmd(self):
 
         if getattr(sys, 'frozen', False):
-            executable_dir = os.path.dirname(sys.executable)
+            exe_dir = os.path.dirname(sys.executable)
+            base_dir = os.path.abspath(os.path.join(exe_dir, '..'))
         else:
-            executable_dir = os.path.dirname(os.path.abspath(__file__))
-        batch_file_path = os.path.join(executable_dir, '..', 'cmd.bat')
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        batch_file_path = os.path.join(base_dir, 'cmd.bat')
 
         self.process = subprocess.Popen(
             [batch_file_path],
