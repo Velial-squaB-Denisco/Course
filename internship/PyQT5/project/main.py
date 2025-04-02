@@ -1,7 +1,8 @@
 import os
 import sys
-import threading
 import subprocess
+from threading import Thread
+from multiprocessing import Process
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget
 
@@ -10,6 +11,7 @@ class MyWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.running = True 
 
         self.setWindowTitle("My prog")
         self.setGeometry(300, 250, 350, 300)
@@ -44,15 +46,15 @@ class MyWindow(QMainWindow):
 
         # /// Step
         self.btnStep1 = QtWidgets.QPushButton("Step1", self)
-        self.btnStep1.clicked.connect(lambda:self.run_cmd(1))
+        self.btnStep1.clicked.connect(lambda: self.run_cmd(1))
         button_layoutV.addWidget(self.btnStep1)
 
         self.btnStep2 = QtWidgets.QPushButton("Step2", self)
-        self.btnStep2.clicked.connect(lambda:self.run_cmd(2))
+        self.btnStep2.clicked.connect(lambda: self.run_cmd(2))
         button_layoutV.addWidget(self.btnStep2)
 
         self.btnStep3 = QtWidgets.QPushButton("Step3", self)
-        self.btnStep3.clicked.connect(lambda:self.run_cmd(3))
+        self.btnStep3.clicked.connect(lambda: self.run_cmd(3))
         button_layoutV.addWidget(self.btnStep3)
 
         main_layout.addLayout(button_layoutV)
@@ -63,12 +65,6 @@ class MyWindow(QMainWindow):
         self.Output.setReadOnly(True)
         main_layout.addWidget(self.Output)
 
-
-        self.process = None
-        self.thread = None
-        self.running = False
-
-        self.update_signal.connect(self.append_text)
 
     def reset(self):
         self.btnReset.setStyleSheet("background-color: gray;")
@@ -84,11 +80,10 @@ class MyWindow(QMainWindow):
 
         self.append_text("Start")
 
-        if not self.running:
-            self.running = True
-            for i in range(3):
-                self.thread = threading.Thread(target=self.run_cmd, args = (i + 1,))
-                self.thread.start()
+        self.thread = Thread(target=self.run_cmd, args=(1,))
+        self.thread.start()
+
+
 
     def stop(self):
         self.btnStart.setStyleSheet("background-color: None;")
@@ -97,12 +92,7 @@ class MyWindow(QMainWindow):
 
         self.append_text("Stop")
 
-        if self.running and self.process:
-            self.running = False
-            self.process.terminate()
-
     def run_cmd(self, i):
-
         if getattr(sys, 'frozen', False):
             exe_dir = os.path.dirname(sys.executable)
             base_dir = os.path.abspath(os.path.join(exe_dir, '..'))
@@ -110,7 +100,9 @@ class MyWindow(QMainWindow):
             base_dir = os.path.dirname(os.path.abspath(__file__))
 
         batch_file_path = os.path.join(base_dir, f'cmd{i}.bat')
-
+        print(batch_file_path)
+        self.append_text(batch_file_path)
+        
         self.process = subprocess.Popen(
             [batch_file_path],
             shell=True,
@@ -121,19 +113,17 @@ class MyWindow(QMainWindow):
             errors='replace'
         )
 
-        for stdout_line in iter(self.process.stdout.readline, ""):
+        self.read_output(self.process.stdout, "stdout")
+        self.read_output(self.process.stderr, "stderr")
+
+    def read_output(self, stream, stream_type):
+        for line in iter(stream.readline, ""):
             if not self.running:
                 break
-            self.update_signal.emit(stdout_line)
+            self.append_text(f"{stream_type}: {line.strip()}")
+        stream.close()
 
-        for stderr_line in iter(self.process.stderr.readline, ""):
-            if not self.running:
-                break
-            self.update_signal.emit(stderr_line)
 
-        self.process.stdout.close()
-        self.process.stderr.close()
-        self.process.wait()
 
     def append_text(self, text):
         self.Output.append(text)
