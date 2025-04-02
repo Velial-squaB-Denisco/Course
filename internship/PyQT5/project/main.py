@@ -1,5 +1,6 @@
 import os
 import sys
+import platform
 import subprocess
 from threading import Thread
 from multiprocessing import Process
@@ -79,9 +80,15 @@ class MyWindow(QMainWindow):
         self.Output.setReadOnly(True)
         main_layout.addWidget(self.Output)
 
+        self.system = platform.system().lower()
+        self.append_text(self.system)
+
         self.progress_updated.connect(self.update_progress)
         self.reset_progress.connect(self.reset_progress_bar)
 
+        for btn in [self.btnStep1, self.btnStep2, self.btnStep3]:
+            btn.setEnabled(True)
+            btn.setStyleSheet("background-color: None;")
 
     def reset_progress_bar(self):
         self.progressBar.setValue(0)
@@ -93,7 +100,6 @@ class MyWindow(QMainWindow):
         self.btnReset.setStyleSheet("background-color: gray;")
         self.btnStart.setStyleSheet("background-color: None;")
         self.btnStop.setStyleSheet("background-color: None;")
-        self.append_text("Reset")
 
         if self.running and self.process:
             self.running = False
@@ -157,10 +163,14 @@ class MyWindow(QMainWindow):
             base_dir = os.path.abspath(os.path.join(exe_dir, '..'))
         else:
             base_dir = os.path.dirname(os.path.abspath(__file__))
-
-        batch_file_path = os.path.join(base_dir, f'cmd{i}.bat')
-        self.append_text(batch_file_path)
+            
+        scripts_dir = os.path.join(base_dir, 'scripts')
+        if self.system == "windows":
+            batch_file_path = os.path.join(scripts_dir, f'cmd{i}.bat')
+        else:
+            batch_file_path = os.path.join(scripts_dir, f'cmd{i}.sh')
         
+        self.append_text(batch_file_path)
         getattr(self, f'btnStep{i}').setStyleSheet("background-color: yellow;")
 
         self.process = subprocess.Popen(
@@ -169,7 +179,7 @@ class MyWindow(QMainWindow):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            encoding='cp1251',
+            encoding='cp866',
             errors='replace'
         )
 
