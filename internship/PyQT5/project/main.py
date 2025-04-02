@@ -8,9 +8,12 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
 
 class MyWindow(QMainWindow):
     update_signal = QtCore.pyqtSignal(str)
+    progress_updated = QtCore.pyqtSignal(int)
+    reset_progress = QtCore.pyqtSignal()
 
     def __init__(self):
         super().__init__()
+
 
         #////////////  \\\\\\\\\\\\
 
@@ -76,12 +79,19 @@ class MyWindow(QMainWindow):
         self.Output.setReadOnly(True)
         main_layout.addWidget(self.Output)
 
+        self.progress_updated.connect(self.update_progress)
+        self.reset_progress.connect(self.reset_progress_bar)
+
+    def reset_progress_bar(self):
+        self.progressBar.setValue(0)
+
+    def update_progress(self, value):
+        self.progressBar.setValue(value)
 
     def reset(self):
         self.btnReset.setStyleSheet("background-color: gray;")
         self.btnStart.setStyleSheet("background-color: None;")
         self.btnStop.setStyleSheet("background-color: None;")
-
         self.append_text("Reset")
 
         if self.running and self.process:
@@ -96,11 +106,16 @@ class MyWindow(QMainWindow):
             btn.setStyleSheet("background-color: None;")
 
     def start(self):
+
+        if self.running and self.process:
+            self.running = False
+            self.process.terminate()
+            self.append_text("Stop")
+
         self.running = True
         self.btnStart.setStyleSheet("background-color: green;")
         self.btnReset.setStyleSheet("background-color: None;")
         self.btnStop.setStyleSheet("background-color: None;")
-
         self.append_text("Start")
 
         self.thread = Thread(target=self.run_cmds_sequentially)
@@ -113,6 +128,12 @@ class MyWindow(QMainWindow):
             self.run_cmd(i + 1)
 
     def start_cmd(self, i):
+
+        if self.running and self.process:
+            self.running = False
+            self.process.terminate()
+            self.append_text("Stop")
+
         self.running = True
         self.thread = Thread(target=self.run_cmd, args=(i,))
         self.thread.start()
@@ -121,7 +142,6 @@ class MyWindow(QMainWindow):
         self.btnStart.setStyleSheet("background-color: None;")
         self.btnReset.setStyleSheet("background-color: None;")
         self.btnStop.setStyleSheet("background-color: red;")
-
         self.append_text("Stop")
 
         if self.running and self.process:
@@ -129,6 +149,8 @@ class MyWindow(QMainWindow):
             self.process.terminate()
 
     def run_cmd(self, i):
+        self.reset_progress.emit()
+
         if getattr(sys, 'frozen', False):
             exe_dir = os.path.dirname(sys.executable)
             base_dir = os.path.abspath(os.path.join(exe_dir, '..'))
@@ -136,7 +158,6 @@ class MyWindow(QMainWindow):
             base_dir = os.path.dirname(os.path.abspath(__file__))
 
         batch_file_path = os.path.join(base_dir, f'cmd{i}.bat')
-        
         self.append_text(batch_file_path)
         
         self.process = subprocess.Popen(
@@ -156,7 +177,20 @@ class MyWindow(QMainWindow):
         for line in iter(stream.readline, ""):
             if not self.running:
                 break
-            self.append_text(f"{stream_type}: {line.strip()}")
+            line_strip = line.strip()
+            self.append_text(f"{stream_type}: {line_strip}")
+            
+            if "Step" in line_strip:
+                parts = line_strip.split()
+                if len(parts) >= 4 and parts[0] == "Step":
+                    step_str = parts[-1]
+                    try:
+                        current_step = int(step_str)
+                        total_steps = 10
+                        percent = int((current_step / total_steps) * 100)
+                        self.progress_updated.emit(percent)
+                    except ValueError:
+                        pass
         stream.close()
 
     def append_text(self, text):
@@ -165,7 +199,7 @@ class MyWindow(QMainWindow):
     def closeEvent(self, event):
         self.running = False
         if self.thread is not None and self.thread.is_alive():
-            self.stop(self)
+            self.stop()
             self.thread.join()
         event.accept()
 
