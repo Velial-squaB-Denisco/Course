@@ -67,6 +67,10 @@ class MyWindow(QMainWindow):
         main_layout.addLayout(button_layoutV)
         main_layout.addLayout(button_layoutH)
 
+        # /// ProgressBar
+        self.progressBar = QtWidgets.QProgressBar(self)
+        main_layout.addWidget(self.progressBar)
+
         # /// Output
         self.Output = QtWidgets.QTextEdit(self)
         self.Output.setReadOnly(True)
@@ -80,17 +84,36 @@ class MyWindow(QMainWindow):
 
         self.append_text("Reset")
 
+        if self.running and self.process:
+            self.running = False
+            self.process.terminate()
+
+        self.Output.clear()
+        self.progressBar.setValue(0)
+
+        for btn in [self.btnStep1, self.btnStep2, self.btnStep3]:
+            btn.setEnabled(True)
+            btn.setStyleSheet("background-color: None;")
+
     def start(self):
+        self.running = True
         self.btnStart.setStyleSheet("background-color: green;")
         self.btnReset.setStyleSheet("background-color: None;")
         self.btnStop.setStyleSheet("background-color: None;")
 
         self.append_text("Start")
 
-        self.thread = Thread(target=self.run_cmd, args=(1,))
+        self.thread = Thread(target=self.run_cmds_sequentially)
         self.thread.start()
 
+    def run_cmds_sequentially(self):
+        for i in range(3):
+            if not self.running:
+                break
+            self.run_cmd(i + 1)
+
     def start_cmd(self, i):
+        self.running = True
         self.thread = Thread(target=self.run_cmd, args=(i,))
         self.thread.start()
 
@@ -135,8 +158,6 @@ class MyWindow(QMainWindow):
                 break
             self.append_text(f"{stream_type}: {line.strip()}")
         stream.close()
-
-
 
     def append_text(self, text):
         self.Output.append(text)
