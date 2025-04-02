@@ -82,6 +82,7 @@ class MyWindow(QMainWindow):
         self.progress_updated.connect(self.update_progress)
         self.reset_progress.connect(self.reset_progress_bar)
 
+
     def reset_progress_bar(self):
         self.progressBar.setValue(0)
 
@@ -160,6 +161,8 @@ class MyWindow(QMainWindow):
         batch_file_path = os.path.join(base_dir, f'cmd{i}.bat')
         self.append_text(batch_file_path)
         
+        getattr(self, f'btnStep{i}').setStyleSheet("background-color: yellow;")
+
         self.process = subprocess.Popen(
             [batch_file_path],
             shell=True,
@@ -172,6 +175,8 @@ class MyWindow(QMainWindow):
 
         self.read_output(self.process.stdout, "stdout")
         self.read_output(self.process.stderr, "stderr")
+
+        getattr(self, f'btnStep{i}').setStyleSheet("background-color: green;")
 
     def read_output(self, stream, stream_type):
         for line in iter(stream.readline, ""):
