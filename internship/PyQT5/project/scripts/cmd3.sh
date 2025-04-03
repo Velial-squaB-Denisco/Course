@@ -2,5 +2,6 @@
 
 for i in {1..10}; do
   echo Step 3 - $i
+  ping -c 1 127.0.0.1 > /dev/null
   sleep 1
 done
