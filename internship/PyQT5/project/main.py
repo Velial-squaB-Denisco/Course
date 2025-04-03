@@ -11,7 +11,11 @@ class Step:
         self.step_number = step_number
 
     def run_script(self):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+            exe_dir = os.path.dirname(sys.executable)
+            base_dir = os.path.abspath(os.path.join(exe_dir, '..'))
+        else:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
 
         scripts_dir = os.path.join(base_dir, 'scripts')
         if platform.system().lower() == "windows":
