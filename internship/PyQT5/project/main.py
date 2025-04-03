@@ -103,7 +103,9 @@ class MyWindow(QMainWindow):
 
         if self.running and self.process:
             self.running = False
+            self.process.wait()
             self.process.terminate()
+
 
         self.Output.clear()
         self.progressBar.setValue(0)
@@ -111,6 +113,7 @@ class MyWindow(QMainWindow):
         for btn in [self.btnStep1, self.btnStep2, self.btnStep3]:
             btn.setEnabled(True)
             btn.setStyleSheet("background-color: None;")
+
 
     def start(self):
 
@@ -186,7 +189,10 @@ class MyWindow(QMainWindow):
         self.read_output(self.process.stdout, "stdout")
         self.read_output(self.process.stderr, "stderr")
 
-        getattr(self, f'btnStep{i}').setStyleSheet("background-color: green;")
+        if self.running and self.process:
+            getattr(self, f'btnStep{i}').setStyleSheet("background-color: green;")
+        else:
+            getattr(self, f'btnStep{i}').setStyleSheet("background-color: red;")
 
     def read_output(self, stream, stream_type):
         for line in iter(stream.readline, ""):
