@@ -110,14 +110,15 @@ class MyWindow(QMainWindow):
         self.Output.setReadOnly(True)
         main_layout.addWidget(self.Output)
 
-        self.append_text(platform.system().lower())
-
         self.progress_updated.connect(self.update_progress)
         self.reset_progress.connect(self.reset_progress_bar)
 
-        for btn in [self.btnStep1, self.btnStep2, self.btnStep3]:
-            btn.setEnabled(True)
-            btn.setStyleSheet("background-color: None;")
+        # for btn in [self.btnStep1, self.btnStep2, self.btnStep3]:
+        #     btn.setEnabled(True)
+        #     btn.setStyleSheet("background-color: None;")
+
+        self.reset()
+        self.append_text(platform.system().lower())
 
     def reset_progress_bar(self):
         self.progressBar.setValue(0)
@@ -201,13 +202,30 @@ class MyWindow(QMainWindow):
             errors='replace'
         )
 
+        # if self.process.stdout in None:
+
+        #     getattr(self, f'btnStep{step_instance.step_number}').setStyleSheet("background-color: blue;")
+
+        #     self.btnStart.setEnabled(True)
+        #     self.btnReset.setEnabled(True)
+        #     self.btnStep1.setEnabled(True)
+        #     self.btnStep2.setEnabled(True)
+        #     self.btnStep3.setEnabled(True)
+
+        #     self.stop()
+
+
         self.read_output(self.process.stdout, "stdout")
         self.read_output(self.process.stderr, "stderr")
+
+
+
 
         if self.running and self.process:
             getattr(self, f'btnStep{step_instance.step_number}').setStyleSheet("background-color: green;")
         else:
             getattr(self, f'btnStep{step_instance.step_number}').setStyleSheet("background-color: red;")
+
 
         self.btnStart.setEnabled(True)
         self.btnReset.setEnabled(True)
@@ -220,7 +238,11 @@ class MyWindow(QMainWindow):
             if not self.running:
                 break
             line_strip = line.strip()
-            self.append_text(f"{stream_type}: {line_strip}")
+            if stream_type == "stderr" and line_strip != None:
+                self.append_text(f"{stream_type}: {line_strip}")
+                self.stop()
+            else:
+                self.append_text(f"{stream_type}: {line_strip}")
             
             if "Step" in line_strip:
                 parts = line_strip.split()
@@ -243,6 +265,13 @@ class MyWindow(QMainWindow):
         if self.thread is not None and self.thread.is_alive():
             self.stop()
             self.thread.join()
+            self.thread = None
+
+        if self.process is not None:
+            self.process.terminate()
+            self.process.wait()
+            self.process = None
+            
         event.accept()
 
 def app():
