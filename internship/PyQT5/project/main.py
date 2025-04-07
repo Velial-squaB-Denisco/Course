@@ -144,16 +144,11 @@ class MyWindow(QMainWindow):
             self.process.terminate()
             self.append_text("Stop")
 
-        self.btnStart.setEnabled(False)
-        self.btnReset.setEnabled(False)
-        self.btnStep1.setEnabled(False)
-        self.btnStep2.setEnabled(False)
-        self.btnStep3.setEnabled(False)
-
         self.running = True
         self.append_text("Start")
         self.thread = Thread(target=self.run_cmds_sequentially)
         self.thread.start()
+
 
     def run_cmds_sequentially(self):
         for step_class in [Step1, Step2, Step3]:
@@ -170,6 +165,7 @@ class MyWindow(QMainWindow):
         self.running = True
         self.thread = Thread(target=self.run_cmd, args=(step_instance,))
         self.thread.start()
+
 
     def stop(self):
         self.append_text("Stop")
@@ -189,6 +185,12 @@ class MyWindow(QMainWindow):
         self.append_text(script_path)
         getattr(self, f'btnStep{step_instance.step_number}').setStyleSheet("background-color: yellow;")
 
+        self.btnStart.setEnabled(False)
+        self.btnReset.setEnabled(False)
+        self.btnStep1.setEnabled(False)
+        self.btnStep2.setEnabled(False)
+        self.btnStep3.setEnabled(False)
+
         self.process = subprocess.Popen(
             [script_path],
             shell=True,
@@ -206,6 +208,12 @@ class MyWindow(QMainWindow):
             getattr(self, f'btnStep{step_instance.step_number}').setStyleSheet("background-color: green;")
         else:
             getattr(self, f'btnStep{step_instance.step_number}').setStyleSheet("background-color: red;")
+
+        self.btnStart.setEnabled(True)
+        self.btnReset.setEnabled(True)
+        self.btnStep1.setEnabled(True)
+        self.btnStep2.setEnabled(True)
+        self.btnStep3.setEnabled(True)
 
     def read_output(self, stream, stream_type):
         for line in iter(stream.readline, ""):
