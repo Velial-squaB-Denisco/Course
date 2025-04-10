@@ -26,16 +26,22 @@ class Step:
         return script_path
 
 class Step1(Step):
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__(1)
+        self.btnStep = QtWidgets.QPushButton("Step1", parent)
+        self.btnStep.clicked.connect(lambda: parent.start_cmd(self))
 
 class Step2(Step):
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__(2)
+        self.btnStep = QtWidgets.QPushButton("Step2", parent)
+        self.btnStep.clicked.connect(lambda: parent.start_cmd(self))
 
 class Step3(Step):
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__(3)
+        self.btnStep = QtWidgets.QPushButton("Step3", parent)
+        self.btnStep.clicked.connect(lambda: parent.start_cmd(self))
 
 class MyWindow(QMainWindow):
     update_signal = QtCore.pyqtSignal(str)
@@ -86,16 +92,16 @@ class MyWindow(QMainWindow):
         button_layoutV.addWidget(self.btnReset)
 
         # /// Step
-        self.btnStep1 = QtWidgets.QPushButton("Step1", self)
-        self.btnStep1.clicked.connect(lambda: self.start_cmd(Step1()))
+        self.step1 = Step1(self)
+        self.btnStep1 = self.step1.btnStep
         button_layoutV.addWidget(self.btnStep1)
 
-        self.btnStep2 = QtWidgets.QPushButton("Step2", self)
-        self.btnStep2.clicked.connect(lambda: self.start_cmd(Step2()))
+        self.step2 = Step2(self)
+        self.btnStep2 = self.step2.btnStep
         button_layoutV.addWidget(self.btnStep2)
 
-        self.btnStep3 = QtWidgets.QPushButton("Step3", self)
-        self.btnStep3.clicked.connect(lambda: self.start_cmd(Step3()))
+        self.step3 = Step3(self)
+        self.btnStep3 = self.step3.btnStep
         button_layoutV.addWidget(self.btnStep3)
 
         main_layout.addLayout(button_layoutV)
@@ -113,10 +119,6 @@ class MyWindow(QMainWindow):
         self.progress_updated.connect(self.update_progress)
         self.reset_progress.connect(self.reset_progress_bar)
 
-        # for btn in [self.btnStep1, self.btnStep2, self.btnStep3]:
-        #     btn.setEnabled(True)
-        #     btn.setStyleSheet("background-color: None;")
-
         self.reset()
         self.append_text(platform.system().lower())
 
@@ -131,6 +133,8 @@ class MyWindow(QMainWindow):
             self.running = False
             self.process.wait()
             self.process.terminate()
+            self.Output.clear()
+            self.progressBar.setValue(0)
 
         self.Output.clear()
         self.progressBar.setValue(0)
@@ -201,18 +205,6 @@ class MyWindow(QMainWindow):
             encoding='cp866',
             errors='replace'
         )
-
-        # if self.process.stdout in None:
-
-        #     getattr(self, f'btnStep{step_instance.step_number}').setStyleSheet("background-color: blue;")
-
-        #     self.btnStart.setEnabled(True)
-        #     self.btnReset.setEnabled(True)
-        #     self.btnStep1.setEnabled(True)
-        #     self.btnStep2.setEnabled(True)
-        #     self.btnStep3.setEnabled(True)
-
-        #     self.stop()
 
 
         self.read_output(self.process.stdout, "stdout")
