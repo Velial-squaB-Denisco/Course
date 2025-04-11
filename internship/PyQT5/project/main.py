@@ -149,6 +149,10 @@ class MyWindow(QMainWindow):
             self.process.terminate()
             self.append_text("Stop")
 
+        for btn in [self.btnStep1, self.btnStep2, self.btnStep3]:
+            btn.setEnabled(True)
+            btn.setStyleSheet("background-color: None;")
+
         self.running = True
         self.append_text("Start")
         self.thread = Thread(target=self.run_cmds_sequentially)
@@ -176,6 +180,7 @@ class MyWindow(QMainWindow):
         self.append_text("Stop")
         if self.running and self.process:
             self.running = False
+            self.process.wait()
             self.process.terminate()
 
         self.btnStart.setEnabled(True)
