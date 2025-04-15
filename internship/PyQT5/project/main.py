@@ -2,46 +2,10 @@ import os
 import sys
 import platform
 import subprocess
+import ClassStep
 from threading import Thread
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget
-
-class Step:
-    def __init__(self, step_number):
-        self.step_number = step_number
-
-    def run_script(self):
-        if getattr(sys, 'frozen', False):
-            exe_dir = os.path.dirname(sys.executable)
-            base_dir = os.path.abspath(os.path.join(exe_dir, '..'))
-        else:
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-
-        scripts_dir = os.path.join(base_dir, 'scripts')
-        if platform.system().lower() == "windows":
-            script_path = os.path.join(scripts_dir, f'cmd{self.step_number}.bat')
-        else:
-            script_path = os.path.join(scripts_dir, f'cmd{self.step_number}.sh')
-
-        return script_path
-
-class Step1(Step):
-    def __init__(self, parent=None):
-        super().__init__(1)
-        self.btnStep = QtWidgets.QPushButton("Step1", parent)
-        self.btnStep.clicked.connect(lambda: parent.start_cmd(self))
-
-class Step2(Step):
-    def __init__(self, parent=None):
-        super().__init__(2)
-        self.btnStep = QtWidgets.QPushButton("Step2", parent)
-        self.btnStep.clicked.connect(lambda: parent.start_cmd(self))
-
-class Step3(Step):
-    def __init__(self, parent=None):
-        super().__init__(3)
-        self.btnStep = QtWidgets.QPushButton("Step3", parent)
-        self.btnStep.clicked.connect(lambda: parent.start_cmd(self))
 
 class MyWindow(QMainWindow):
     update_signal = QtCore.pyqtSignal(str)
@@ -92,15 +56,15 @@ class MyWindow(QMainWindow):
         button_layoutV.addWidget(self.btnReset)
 
         # /// Step
-        self.step1 = Step1(self)
+        self.step1 = ClassStep.Step1(self)
         self.btnStep1 = self.step1.btnStep
         button_layoutV.addWidget(self.btnStep1)
 
-        self.step2 = Step2(self)
+        self.step2 = ClassStep.Step2(self)
         self.btnStep2 = self.step2.btnStep
         button_layoutV.addWidget(self.btnStep2)
 
-        self.step3 = Step3(self)
+        self.step3 = ClassStep.Step3(self)
         self.btnStep3 = self.step3.btnStep
         button_layoutV.addWidget(self.btnStep3)
 
@@ -160,7 +124,7 @@ class MyWindow(QMainWindow):
 
 
     def run_cmds_sequentially(self):
-        for step_class in [Step1, Step2, Step3]:
+        for step_class in [ClassStep.Step1, ClassStep.Step2, ClassStep.Step3]:
             if not self.running:
                 break
             self.run_cmd(step_class())
